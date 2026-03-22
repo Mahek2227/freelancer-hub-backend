@@ -19,11 +19,15 @@ export const submitDeliverable = async (req, res) => {
 };
 
 export const getDeliverables = async (req, res) => {
-  const data = await Deliverable.find({
-    project: req.params.projectId,
-  }).populate("freelancer", "name email");
+  try {
+    const data = await Deliverable.find({
+      project: req.params.projectId,
+    }).populate("freelancer", "name email");
 
-  res.json(data);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 export const approveDeliverable = async (req, res) => {

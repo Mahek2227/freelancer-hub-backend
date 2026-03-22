@@ -9,7 +9,7 @@ import protect from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 router.post("/", protect, submitDeliverable);
-router.get("/:projectId", protect, getDeliverables);
 router.put("/approve/:id", protect, approveDeliverable);
+router.get("/:projectId", protect, getDeliverables);
 
 export default router;

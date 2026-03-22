@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema({
   // Account info
   is_verified: { type: Boolean, default: false },
   stripe_account_id: { type: String, default: null },
+  
+  // Password Reset
+  passwordResetToken: { type: String, default: null },
+  passwordResetExpires: { type: Date, default: null },
 }, { timestamps: true });
 
 // Hash password before save
