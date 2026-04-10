@@ -1,18 +1,22 @@
 import User from "../models/User.js";
 import multer from "multer";
-import path from "path";
+import { v2 as cloudinary } from "cloudinary";
 
-// Multer configuration for avatar uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/avatars/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, req.user._id + "-" + Date.now() + path.extname(file.originalname));
-  },
+// Multer configuration for memory storage (Cloudinary will handle storage)
+const storage = multer.memoryStorage();
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
+  }
 });
-
-const upload = multer({ storage });
 
 export const getUserById = async (req, res) => {
   try {
@@ -65,8 +69,16 @@ export const updateProfile = async (req, res) => {
 
 export const uploadAvatar = async (req, res) => {
   try {
+    console.log('uploadAvatar called');
+    console.log('req.file:', req.file ? 'Present' : 'Missing');
+    console.log('req.user:', req.user ? 'Authenticated' : 'NOT authenticated');
+
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    if (!req.user) {
+      return res.status(401).json({ message: "User not authenticated" });
     }
 
     const user = await User.findById(req.user._id);
@@ -75,14 +87,38 @@ export const uploadAvatar = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Set avatar URL (in production, use CDN/cloud storage)
-    user.profile_picture_url = `/uploads/avatars/${req.file.filename}`;
+    // Upload to Cloudinary
+    console.log('Uploading to Cloudinary...');
+    const result = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "freelancer-hub/avatars",
+          public_id: `user_${req.user._id}_${Date.now()}`,
+          resource_type: "auto",
+        },
+        (error, result) => {
+          if (error) {
+            console.error('Cloudinary error:', error);
+            reject(error);
+          } else {
+            console.log('Cloudinary upload success:', result.secure_url);
+            resolve(result);
+          }
+        }
+      );
 
+      uploadStream.end(req.file.buffer);
+    });
+
+    // Update user with Cloudinary URL
+    user.profile_picture_url = result.secure_url;
     await user.save();
 
+    console.log('Avatar updated successfully');
     res.status(200).json(user);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Avatar upload error:', error.message, error.stack);
+    res.status(500).json({ message: error.message || "Avatar upload failed" });
   }
 };
 

@@ -4,18 +4,19 @@ import {
   createInvoice,
   getInvoices,
   getInvoiceById,
-  updateInvoice,
+  updateInvoiceStatus,
+  processPayment,
   deleteInvoice,
-  markAsPaid,
-} from "../controllers/invoiceController.js";
+} from "../controllers/paymentController.js";
 
 const router = express.Router();
 
+// Invoice routes
 router.post("/", protect, createInvoice);
 router.get("/", protect, getInvoices);
 router.get("/:id", protect, getInvoiceById);
-router.put("/:id", protect, updateInvoice);
-router.post("/:id/mark-paid", protect, markAsPaid);
+router.put("/:id/status", protect, updateInvoiceStatus);
+router.post("/:id/pay", protect, processPayment);
 router.delete("/:id", protect, deleteInvoice);
 
 export default router;

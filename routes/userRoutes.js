@@ -13,7 +13,20 @@ const router = express.Router();
 
 router.get("/profile", protect, getProfile);
 router.put("/profile", protect, updateProfile);
-router.post("/avatar", protect, upload.single("file"), uploadAvatar);
+
+// Avatar upload route - with proper error handling for multer
+router.post("/avatar", protect, (req, res, next) => {
+  console.log('Avatar route hit');
+  upload.single("file")(req, res, (err) => {
+    if (err) {
+      console.error('Multer error:', err.message);
+      return res.status(400).json({ message: err.message || "File upload error" });
+    }
+    console.log('Multer passed, calling uploadAvatar');
+    next();
+  });
+}, uploadAvatar);
+
 router.get("/search", protect, searchUsers);
 router.get("/:id", protect, getUserById);
 
