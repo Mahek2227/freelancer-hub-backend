@@ -29,6 +29,8 @@ export const getProjects = async (req, res) => {
       })
         .populate("client", "name email profile_picture_url company_name average_rating total_projects_completed")
         .populate("freelancer", "name email profile_picture_url hourly_rate average_rating");
+        
+        
 
     } else if (req.user.role === "freelancer") {
       // Freelancer sees open projects + assigned projects
@@ -40,6 +42,7 @@ export const getProjects = async (req, res) => {
       })
         .populate("client", "name email profile_picture_url company_name average_rating total_projects_completed")
         .populate("freelancer", "name email profile_picture_url hourly_rate average_rating");
+        
     }
 
     res.status(200).json(projects);
