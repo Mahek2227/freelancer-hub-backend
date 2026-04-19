@@ -1,5 +1,6 @@
 import Proposal from "../models/Proposal.js";
 import Project from "../models/Project.js";
+import { notifyUser } from "../utils/notifyUser.js";
 
 // Freelancer submits proposal
 export const createProposal = async (req, res) => {
@@ -21,6 +22,7 @@ export const createProposal = async (req, res) => {
       coverLetter,
       bidAmount
     });
+   await notifyUser(project.client, "New Proposal 📩", "A freelancer submitted proposal");
 
     res.status(201).json(proposal);
   } catch (error) {
@@ -57,6 +59,11 @@ export const acceptProposal = async (req, res) => {
     // Update proposal
     proposal.status = "accepted";
     await proposal.save();
+    await notifyUser(
+    proposal.freelancer,
+    "Proposal Accepted ✅",
+    "Client accepted your proposal"
+  );
 
     // Reject other proposals
     await Proposal.updateMany(

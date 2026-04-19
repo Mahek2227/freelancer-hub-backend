@@ -145,7 +145,11 @@ export const processPayment = async (req, res) => {
     await invoice.save();
 
     const updatedInvoice = await invoice.populate("project client freelancer");
-
+    await notifyUser(
+  freelancerId,
+  "Payment Received 💰",
+  "You received your payment"
+);
     res.status(200).json({
       message: "Payment processed successfully",
       invoice: updatedInvoice,

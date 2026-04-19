@@ -125,3 +125,33 @@ export const searchUsers = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const saveToken = async (req, res) => {
+  try {
+    console.log("🔥 SAVE TOKEN HIT");
+    console.log("BODY:", req.body);
+    console.log("USER:", req.user);
+
+    if (!req.body.token) {
+      return res.status(400).json({ message: "Token missing" });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.fcmToken = req.body.token;
+
+    await user.save();
+
+    console.log("✅ TOKEN SAVED:", user.fcmToken);
+
+    res.json({ message: "Token saved successfully" });
+
+  } catch (error) {
+    console.log("❌ SAVE TOKEN ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

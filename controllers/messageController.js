@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Message, Conversation } from "../models/Message.js";
+import {notifyUser} from "../utils/notifyUser.js";
 
 // Get all conversations for user
 export const getConversations = async (req, res) => {
@@ -100,6 +101,16 @@ export const sendMessage = async (req, res) => {
       sender: req.user._id,
       text,
     });
+    // 🔔 SEND NOTIFICATION TO OTHER USER
+    const receiverId = conversation.participants.find(
+      (id) => id.toString() !== req.user._id.toString()
+    );
+
+    await notifyUser(
+      receiverId,
+      "New Message 💬",
+      text
+    );
 
     // Update conversation last message
     conversation.lastMessage = text;

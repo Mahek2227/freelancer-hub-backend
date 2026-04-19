@@ -37,6 +37,8 @@ const userSchema = new mongoose.Schema({
   // Account info
   is_verified: { type: Boolean, default: false },
   stripe_account_id: { type: String, default: null },
+  // Notifications
+  fcmToken: { type: String, default: null },
   
   // Password Reset
   passwordResetToken: { type: String, default: null },
@@ -44,10 +46,8 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Hash password before save
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    next();
-  }
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);

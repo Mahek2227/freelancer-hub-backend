@@ -4,7 +4,16 @@ export const createInvoice = async (req, res) => {
   try {
     const { project, freelancer, amount, dueDate, description } = req.body;
 
-    // Verify user is client on the project
+    // ✅ CHECK: only 1 invoice per project
+    const existingInvoice = await Invoice.findOne({ project });
+
+    if (existingInvoice) {
+      return res.status(400).json({
+        message: "Invoice already exists for this project",
+      });
+    }
+
+    // Create invoice
     const invoiceData = new Invoice({
       project,
       client: req.user._id,
@@ -138,12 +147,18 @@ export const markAsPaid = async (req, res) => {
     }
 
     // Either client or freelancer can mark as paid
-    if (
-      invoice.client.toString() !== req.user._id.toString() &&
-      invoice.freelancer.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).json({ message: "Not authorized" });
+    // ✅ ONLY CLIENT CAN PAY
+    if (invoice.client.toString() !== req.user._id.toString()) {
+     return res.status(403).json({
+     message: "Only client can pay invoice",
+     });
     }
+    // prevent double payment
+    if (invoice.status === "paid") {
+      return res.status(400).json({
+      message: "Invoice already paid",
+  });
+}
 
     invoice.status = "paid";
     invoice.paidDate = new Date();
@@ -155,3 +170,4 @@ export const markAsPaid = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+      
